@@ -1,0 +1,80 @@
+1. man -K "word" or man -k "word" the first one will query 
+each file it finds to see if it should be opened,
+ the second command simply lists all of the names that match the search
+2. whereis cp, whereis wc
+these functions return the location of the programs which are:
+/bin/cp
+and
+/usr/bin/wc
+3.find /usr/bin -type f -executable -name ?
+this gives us the names with only one character, these are w, [, and X.
+w shows what all users are doing at the moment. [ is the start of a conditional
+ expression evaluation,
+ just like TEST, except it needs a closing]. X runs a window system
+4.ls /usr/bin -l
+this lists out the directory that cc is in, from here, it can be seen that cc ->
+ gcc, so gcc is actually being executed from /usr/bin/gcc
+5. man chmod
+g-s means that the users in the file's group will have the set group ID 
+removed/cleared
+6.find -mtime n allows for searching for 
+files that have been modified within n days.
+ 7.find / -type d -mtime 3
+this returns a large number of files
+8. whereis find
+this returns that find is in /bin and /usr/bin, thus we do
+find /usr/bin -type l -ls | wc -l
+find /bin -type l -ls | wc -l
+to get the count of how many symbolic links there are in the two directories,
+ they total out to be 346 + 18 = 364
+9. find /usr/lib -type f -printf '%T+ %p \n' | sort
+this prints out all the files' 
+modification time and file name and then sorts that
+ based on the time, since its the first thing in the line. 
+ This shows that the oldest file based on modification time is
+2003-08-29+12:56:11.0000000000 
+/usr/lib/x86_64-redhat-linux5E/include/bits/stdio-lock.h
+10.man locale
+locale gets its data from global environment variables (i.e. LC_*)
+11.C-h a s o r t Enter
+this lists the commands with sort:
+Buffer-menu-sort, sort-columns, sort-fields, sort-lines, sort-numeric-fields, 
+sort-pages, sort-paragraphs, sort-regexp-fields, 
+tabulated-list-col-sort, tablulated-list-sort
+12. C-h b
+this lists the function of all keybindings, from this we see that:
+C-a		move-beginning-of-line
+C-b		backward-char
+C-c		mode-specific-command-prefix
+C-d		delete-char
+C-e		move-end-of-line
+C-f		forward-char
+C-g		keyboard-quit
+C-h		help-command
+TAB		indent-for-tab-command
+C-j		electric-newline-and-maybe-indent
+C-k		kill-line
+C-l		recenter-top-bottom
+RET		newline
+C-n		next-line
+C-o		open-line
+C-p		previous-line
+C-q		quoted-insert
+C-r		isearch-backward
+C-s		isearch-forward
+C-t		transpose-chars
+C-u		universal-argument
+C-v		scroll-up-command
+C-w		kill-region
+C-x		Control-X-prefix
+C-y		yank
+C-z		suspend-frame
+13. C-g is a quit function. It will quit lisp code that is running.
+this was found by C-h f keyboard-quit
+14. yank, bound to C-y, pastes the most recently killed/copied text
+also found with C-h f yank
+15. it appears that dired will list . files while ls -l does not 
+(e.g. dired lists .fipscheck.hmac while ls -l does not). 
+Thus dired will have a longer list
+this was found by using diff to compare the outputs
+of the two functions

@@ -1,0 +1,67 @@
+lab 5
+We begin with
+   wget http://web.cs.ucla.edu/classes/fall15/cs35L/assign/coreutils-with-bug.tar.gz
+   tar -zxvf coreutils-with-bug
+to download and dezip the coretutils package
+however, with
+	 ./configure
+	 make
+we get an error. The error is that in the function futimens, there is a type conflict
+between the files utimecmp.h and utimecmp.c where the former has type int and the latter
+type extern int.
+We get the patch into the file rnpatch.txt and apply it
+   patch -p0 < rnpatch.txt
+the patch fixes the problem by replacing calls for futimens with a renamed function coreutils_futimens
+which apparently does not have conflicting types.
+after the make finishes, we check for the bug in a temporary directory
+we follow the instructions in the assignment spec
+   tmp=$(mktemp -d)
+   cd $tmp
+   touch -d '1918-11-11 11:00 GMT' wwi-armistice	
+   touch now
+   sleep 1
+   touch now1
+   TZ=UTC0 ~/coreutils-with-bug/src/ls -lt --full-time wwi-armistice now now1
+which returns
+-rw-r--r-- 1 hansenq csugrad 0 1918-11-11 03:00:00.000000000 -0800 wwi-armistice
+-rw-r--r-- 1 hansenq csugrad 0 2015-10-30 22:02:18.672242206 -0700 now1
+-rw-r--r-- 1 hansenq csugrad 0 2015-10-30 22:02:10.214939117 -0700 now
+
+To diagnose the problem of the function, we use gdb on the executable ls
+   
+running the program with the same input parameters
+	run [ -lt --full-time wwi-armistice now now1 ]
+we use info functions to look at the functions that are present inside of ls.c
+and set breakpoints for functions that seem like they would affect the ordering
+of the list of files
+we set breakpoints with
+   b compare_mtime
+   b cmp_mtime
+since we are looking at how the function compares the most recently modified
+time.
+
+running the program in gdb with the inputs above, we eventually
+find the location where the actual time is being compared is
+inthe /lib/timespec.h file. The issue is that the function
+timespec_cmp is trying to return an int, but it is comparing longs and
+time_t data types. For very early times, this eventual casting to int
+can cause a signed overflow into a large positive number and thus the
+function thinks that 1918 is in the future.
+
+To fix this we make the variable diff into a long and check the sign
+of that instead of just returning the difference between the two parameters.
+
+Using this fix, we get the correct output.
+
+-rw-r--r-- 1 hansenq csugrad 0 2015-11-02 05:32:33.475351988 +0000 now1
+-rw-r--r-- 1 hansenq csugrad 0 2015-11-02 05:32:32.470315831 +0000 now
+-rw-r--r-- 1 hansenq csugrad 0 1918-11-11 11:00:00.000000000 +0000 wwi-armistice
+
+we create the patch with
+   diff -u timespec.h~ timespec.h > lab5.diff
+
+when we attempt to recreate the bug on the home directory instead of a
+temp directory, we get the same bug, but the function thinks the date is 2054
+instead of 1918. The reason for this is that one location used unsigned ints
+while the other uses signed. Since the home directory has unsigned ints, there
+is no negative value so the date wraps around to 2054.

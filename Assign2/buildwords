@@ -1,0 +1,20 @@
+#!/bin/sh
+sed "s_<u>\([^>]*\)</u>_\1_g" |
+sed 's/^[ \t]*//' |
+sed '
+/<tr>/ {
+      N
+	  /<td>.*<\/td>/ {
+			N
+                        /<td>[^>]*<\/td>/{
+                                        N
+			                /<\/tr>/ {
+			        	s/<tr>\n<td>.*<\/td>\n<td>\([^>]*\)<\/td>\n<\/tr>/\1/g
+					}
+			}
+	  }
+}
+' |
+sed '/<.*>/ {D} ' |
+tr "\`," "\' " | tr [:upper:] [:lower:] |
+sed "/[^aeioupkmnwlh\' ]/d" | tr " " "\n" | sed '/^$/d' | sort -u

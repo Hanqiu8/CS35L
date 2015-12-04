@@ -1,0 +1,34 @@
+Lab 8
+we first generate a 10 million list of double precision floating point numbers.
+   od -An -t f -N 80000000 < /dev/random |tr -s ' ' '\n' >rand.txt
+since each float is 8 bytes, we have od of 80 million bytes. -An is so there
+will be no output of the data info, -t f is so the output is all floats.
+we pipe this to tr since the od outputs two floats per row.
+Now we use sort on this file with various amounts of parallelization
+and we also time the process    
+
+
+[hansenq@lnxsrv04 ~/lab8]$ time -p /usr/local/cs/bin/sort -g rand.txt > /dev/null
+real 34.22
+user 189.05
+sys 0.37
+[hansenq@lnxsrv04 ~/lab8]$ time -p /usr/local/cs/bin/sort -g --parallel=1 rand.txt > /dev/null
+real 178.95
+user 178.74
+sys 0.22
+[hansenq@lnxsrv04 ~/lab8]$ time -p /usr/local/cs/bin/sort -g --parallel=2 rand.txt > /dev/null
+real 94.01
+user 179.85
+sys 0.22
+[hansenq@lnxsrv04 ~/lab8]$ time -p /usr/local/cs/bin/sort -g --parallel=4 rand.txt > /dev/null
+real 52.98
+user 179.79
+sys 0.28
+[hansenq@lnxsrv04 ~/lab8]$ time -p /usr/local/cs/bin/sort -g --parallel=8 rand.txt > /dev/null
+real 33.65
+user 189.00
+sys 0.37
+
+We can see that at first, the real time goes up a significant amount when we begin paralellization
+but goes down as the number of threads increases.The rate at which time goes down is not linear though,
+as adding more threads will cause more overhead and slow the thread down.

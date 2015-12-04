@@ -1,0 +1,53 @@
+Patching LS
+First we get the core utils files with
+wget ftp://ftp.gnu.org/gnu/coreutils/coreutils-7.6.tar.gz
+
+then we unzip the file with:
+tar xzvf coreutils-7.6.tar.gz 
+
+we now make a new directory coreutilsInstall for the actual install
+mkdir coreutilsInstall
+
+we then configure, compile and install with the following commands
+./configure --prefix=/u/cs/ugrad/hansenq/coreutilsInstall
+make
+make install
+
+the prefix for configure will make it so that coreutils will be installed
+in our specified directory
+from here we can test that the ls function doesn't work properly with
+/bin/ls -l
+
+which gives us
+-rw-r--r--  1 hansenq csugrad       46 2015-10-18 02:38 test1.txt
+
+
+to patch this, we create a patchfile
+in the original coreutils-7.6 directory
+and copy the diff text into it
+the we commane
+patch -p1 <patchfile
+
+this will use the diff text we put into
+patch file and modify the files based on the given patch
+
+the -p1 option is to specify that the base directory is included in the diff
+
+after this is done, we just do
+make
+
+make install is not needed since make already recompiles the patched file 
+into the already created directory. configure is not needed since a makefile
+ has already been created and dependencies checked. Only the make command 
+ is need to recompile the modified ls program based on the diff.
+
+with the new ls, we can see that the patch has fixed the issue
+on a recent file:
+-rw-r--r--  1 hansenq csugrad       46 Oct 18 02:38 test1.txt
+
+
+and on an older file
+-rw-r--r--  1 hansenq csugrad        0 Jan 21  2014 somefile.txt
+
+
+the last file was marked with touch -t 201401210959.30 somefile.txt

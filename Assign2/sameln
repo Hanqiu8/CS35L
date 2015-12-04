@@ -1,0 +1,39 @@
+#!/bin/bash
+IFS=$'\n'
+nfiles=`ls -A $1 | wc -l`
+n=0
+searchNum=0
+for f in `find $1 -type f -links 1 -name ".*" |sort -f` ; do
+((n++))
+searchNum=$((nfiles - n))
+    for g in `find $1 -type f -links 1 |sort -f  | tail -$searchNum` ; do
+       	cmp -s $f $g
+	value=$?
+	    if [ "$f" != "$g" ] && [ "0" =  "$value" ]; then
+	       echo "Duplicate Found"
+	       echo "$f and $g"
+		rm $g
+		ln $f $g
+	    fi
+	 done
+done
+n=0
+searchNum=0
+for f in `find $1 -type f -links 1 |sort -f  ` ; do
+(( n++ ))
+searchNum=$((nfiles - n ))
+    for g in `find $1 -type f -links 1 |sort -f | tail -$searchNum`; do
+	cmp -s $f $g
+	value=$?
+	    if [ "$f" != "$g" ] && [  "$value" = "0" ]; then
+		echo "Duplicate Found"
+		echo "$f and $g"
+		
+		rm $g
+		ln $f $g
+	    fi
+     done
+done
+
+
+    

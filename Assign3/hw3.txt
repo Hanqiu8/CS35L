@@ -1,0 +1,27 @@
+Q1.
+The "case_long_iso_time_style:" was removed since it was a goto label
+for the for loop in the second part of the edit. Since the goto for that
+label has been removed in the other part of the patch, the label itself is
+essentially useless without its respective goto.
+
+Q2.
+The edit will cause the date format to be displayed with string abbreviations,
+however, there can be locations where abbreviations for the months either
+do not exist or are different than that of english use. Thus this may cause
+confusion for users in different locales
+
+Q3.
+Invoking the script on an empty file causes an index out of range error.
+The script tries to choose a random line and read it out. It does this
+with the random. choice() function, which
+raises and IndexError if the sequience its
+suppose to choose from is empty. It does this since it tries to look at an
+object in a list, however since this list has length 0, and object index
+will be larger than the list size and give an index error.
+
+Q4.
+Running randline.py returns a syntax error. This is because in python3,
+tuple unpacking has been deprecated. The IOError originally in 
+python 2 returned an exception tuple and could have been automatically
+ unpacked as a tuple into the errno and strerror is
+now no longer able to do so. Thus the syntax is incorrect

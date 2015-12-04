@@ -1,0 +1,92 @@
+First, the environment variables must be checked with the locale function. 
+Seeing that thus return a LC_CTYPE of not C, we use export LC_ALL='C' to
+ set it to the correct value. We get the words file with the command 
+ ls /usr/share/dict/words > words and we get the html with 
+ wget http://web.cs.ucla.edu/classes/fall15/cs35L/assign/assign2.html 
+ > assign2.txt.
+
+We now go through the list of given commands and observe the output:
+cat assign2.html  tr -c 'A-Za-z' '[\n*]'
+replaces all non-letter characters with newlines
+cat assign2.html | tr -cs 'A-Za-z' '[\n*]'
+replaces all non-letter characters with newlines but also ignores 
+multiple newlines in a row (so every string in html file is 
+output one line at a time)
+cat assign2.html | tr -cs 'A-Za-z' '[\n*]' | sort
+the strings are now arraged in alphabetical order
+cat assign2.html | tr -cs 'A-Za-z' '[\n*]' | sort -u
+repeated strings in the sorted list are now removed
+cat assign2.html | tr -cs 'A-Za-z' '[\n*]' | sort -u | comm - words
+compares the list of sorted unique strings from the html to 
+the dictionary and outputs into the respective columns
+cat assign2.html | tr -cs 'A-Za-z' '[\n*]' | sort -u | comm -23 - words
+outputs words found in the assign2 html but not in the dictionary
+
+it is notable that this above spellcheck does not account for 
+capital letters and will say a capitalized word is spelled 
+incorrectly when it actually isn't
+
+Buildwords:
+
+#!/bin/sh
+sed "s_<u>\([^>]*\)</u>_\1_g" |
+sed 's/^[ \t]*//' |
+sed '
+/<tr>/ {
+      N
+	  /<td>.*<\/td>/ {
+			N
+                        /<td>[^>]*<\/td>/{
+                                        N
+			                /<\/tr>/ {
+			        	s/<tr>\n<td>.*<\/td>\n<td>\([^>]*\)<\/td>\n<\/tr>/\1/g
+					}
+			}
+	  }
+}
+' |
+sed '/<.*>/ {D} ' |
+tr "\`," "\' " | tr [:upper:] [:lower:] |
+sed "/[^aeioupkmnwlh\' ]/d" | tr " " "\n" | sed '/^$/d' | sort -u
+
+what this does is it first replaces all underline and tab
+ characters with nothing as to not interfere with the next part.
+ The second part searches for the pattern of eword and hword as 
+ described by the assignment, and only outputs the hword. Finally 
+ the file will replace all ` with ' and remove any lines that
+ have non-hawaiian characters, followed by some general sorting.
+
+
+Modifying the last shell command to make spell check, we get that 
+cat assign2.txt | tr '[:upper:]' '[:lower:]' 
+| sed "s/[^a-zA-Z\']/\n/g"  | sort -u | comm -23 - hwords
+
+this command will lowercase all uppercase and then do the same 
+compare, but with hwords instead of words, assuming that hwords 
+was already created by buildwords
+this command also replaces tr with sed to allow for the ignoring of the
+ \' character when replacing non-letters with newline since the 
+ apostrophe is needed to spell hawaiian words
+
+using the command:
+ cat assign2.html | tr '[:upper:]' '[:lower:]'
+ |sed "s/[^a-zA-Z\']/\n/g" | sort -u | comm -23 - hwords | wc -l
+we count that, in Hawaiian, the number of misspelled words is 416
+
+using the command:
+ cat hwords | tr '[:upper:]' '[:lower:]'|sed "s/[^a-zA-Z\']/\n/g" 
+ | sort -u | comm -23 - hwords | wc -l
+we count that there are 0 mispelled Hawaiian words 
+in the Hawaiian dictionary
+
+using the command:
+ cat assign2.html | tr '[:upper:]' '[:lower:]'
+ |tr -cs 'A-Za-z' '[\n*]' | sort -u | comm -23 - words |wc -l
+we find that therer are 15 mispelled english words on the page
+
+from all this data, we can find out:
+there are many many words that are mispelled in hawaiian
+ but not in english e.g. "other"
+there are not any words that are mispelled in english that
+ are spelled correctly in hawaiian, even words like 
+ "kula" are found in the english words fi
